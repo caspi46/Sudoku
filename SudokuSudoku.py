@@ -4,107 +4,82 @@ from tkinter import messagebox
 from functools import partial
 from itertools import chain
 import random
+from SudokuSetSet import SudokuSetSet
 
 class PlaySudoku:
     def __init__(self):
         self.table = [[0 for i in range(9)] for j in range(9)]
+        setSudoku = SudokuSetSet(self.table)
+        self.userTable = [[0 for i in range(9)] for j in range(9)]
         self.root = Tk()
-        self.root.title("Welcome to Sudoku")
+        self.root.title("SUDOKU GAME")
         self.btn_cells = [[None] * 9] * 9
-        self.shownNum = random.randint(17, 30)
+        self.shownNum = -1
         self.randNums = [ ]
         self.randNumsD = { }
-        self.setRand()
+        self.disNums = [ ]
         self.cells = { }
         self.savePosition = (-1, -1)
         self.done = False
-        self.rangeList = [ ]
-        self.setRangeList()
+        self.welcome = Label(self.root, text="Welcome to Sudoku", font=('Aerial 17 bold italic'))
+        self.easy = Button(self.root, text='EASY', width=25, font=('Aerial 15 bold italic'), command=lambda: self.setDifficult(1))
+        self.mid = Button(self.root, text='MEDIUM', width=25, font=('Aerial 15 bold italic'), command=lambda: self.setDifficult(2))
+        self.hard = Button(self.root, text='HARD', width=25, font=('Aerial 15 bold italic'), command=lambda: self.setDifficult(3))
 
-    def setRangeList(self):
-        r = (-1, -1)
-        l = (-1, -1)
-        for i in range(3):
-            if i * 2 in range(0, 3):
-                r = range(0, 3)
-            elif i * 2 in range(3, 6):
-                r = range(3, 6)
-            else:
-                r = range(6, 9)
-            for j in range(3):
-                if i * 2 in range(0, 3):
-                    l = range(0, 3)
-                elif i * 2 in range(3, 6):
-                    l = range(3, 6)
-                else:
-                    l = range(6, 9)
-                self.rangeList.append((r, l))
 
-    def setHori(self, r):
-        return self.table[r]
+    def setHide(self):
+        numDisplay = random.randint(17, 30)
 
-    def setVert(self, c):
-        return [self.table[i][c] for i in range(9)]
+        for i in range(numDisplay):
+            pos = (random.randint(0, 8), random.randint(0, 8))
+            while pos in self.disNums:
+                pos = (random.randint(0, 8), random.randint(0, 8))
 
-    def setSquare(self, rr, cr):
-        cantS = []
-        for i in rr:
-            for j in cr:
-                cantS.append(self.table[i][j])
-        return cantS
+            self.disNums.append(pos)
+            self.userTable[pos[0]][pos[1]] = self.table[pos[0]][pos[1]]
 
-    def setRand(self):
-        for i in range(self.shownNum):
-            r = random.randint(0, 8)
-            c = random.randint(0, 8)
-
-            rr = self.checkSquare(r)
-            cr = self.checkSquare(c)
-
-            while i != 0 and (r, c) in self.randNums:
-                r = random.randint(0, 8)
-                c = random.randint(0, 8)
-
-            self.randNums.append((r, c))
-            v = random.randint(1, 9)
-            cantC = self.setHori(r)
-            cantR = self.setVert(c)
-            cantS = self.setSquare(rr, cr)
-
-            while v in cantC or v in cantR or v in cantS:
-                v = random.randint(1, 9)
-            self.table[r][c] = v
-            self.randNumsD[(r, c)] = v
-
-    def checkSquare(self, i):
-        if i in range(0, 3):
-            return range(0, 3)
-        elif i in range(3, 6):
-            return range(3, 6)
-        else:
-            return range(6, 9)
 
     def clickNum(self, num):
-        if not (0 in chain(*self.table)):
-            self.checkTable()
-        if self.done == False:
+        if self.checkTable():
+            print("Game Done")
+            self.done = True
+        if not self.done:
             if self.savePosition == (-1, -1):
                 return
             bname = (self.cells[self.savePosition])
             bname.configure(text=num, fg="blue", font=('Aerial 13 bold'))
+            self.userTable[self.savePosition[0]][self.savePosition[1]] = num
 
 
     def clickB(self, row, column):
         self.savePosition = (row, column)
 
+    def setDifficult(self, num):
+        if num == 1:
+            self.shownNum = random.randint(26, 30)
+        elif num == 2:
+            self.shownNum = random.randint(23, 25)
+        else:
+            self.shownNum = random.randint(17, 22)
+        self.forgets()
+        self.setHide()
+        self.showTable()
+    def forgets(self):
+        self.welcome.pack_forget()
+        self.easy.grid_forget()
+        self.mid.grid_forget()
+        self.hard.grid_forget()
+    def callDiffButtons(self):
+        self.welcome.grid()
+        self.easy.grid()
+        self.mid.grid()
+        self.hard.grid()
     def showTable(self):
-        l = Label(self.root, text="Welcome to Sudoku", font=('Aerial 17 bold italic'))
-        l.pack()
         center = Frame(self.root, bg='white', width=900, height=900, padx=3, pady=3)
         # layout all of the main containers
         self.root.grid_rowconfigure(9, weight=1)
         self.root.grid_columnconfigure(9, weight=1)
-        center.pack()
+        center.grid(row=1, sticky="nsew")
 
         # create the center widgets
         center.grid_rowconfigure(0, weight=1)
@@ -125,8 +100,8 @@ class PlaySudoku:
                 frm_cell.grid(row=(row % 3), column=(column % 3), sticky='nsew')
                 frm_cell.rowconfigure(0, minsize=50, weight=1)
                 frm_cell.columnconfigure(0, minsize=50, weight=1)
-                if (row, column) in self.randNums:
-                    self.btn_cells[row][column] = Button(frm_cell, relief='ridge', bg='white', text=str(self.randNumsD[(row, column)]))
+                if (row, column) in self.disNums:
+                    self.btn_cells[row][column] = Button(frm_cell, relief='ridge', bg='white', text=str(self.table[row][column]))
                     self.btn_cells[row][column].grid(sticky='nsew')
                     continue
 
@@ -137,7 +112,7 @@ class PlaySudoku:
         c = [None for i in range(9)]
         block = []
         l = Label(self.root, text="Click Button 1 - 9", font=('Aerial 17 bold italic'))
-        l.pack()
+        l.grid()
         for j in range(9):
             f = Frame(center, highlightbackground='white',
                       highlightcolor='black', highlightthickness=1)
@@ -154,32 +129,9 @@ class PlaySudoku:
             c[j].grid(sticky='nsew')
 
     def checkTable(self):
-        for i in range(9):
-            v = [ ]
-            v.append(self.table[i][0])
-            h = [ ]
-            h.append(self.table[0][i])
-            for j in range(9):
-                if j != 0 and (self.table[i][j] in v or self.table[j][i] in h):
-                    return False
-
-            for i in self.rangeList:
-                for j in i[0]:
-                    v = []
-                    for k in i[1]:
-                        if bool(v):
-                            v.append(self.table[j][k])
-                            continue
-                        if self.table[j][k] in v:
-                            return False
-
-            self.done = True
-            return True
-
-
-
+        return self.table == self.userTable
 
 
     def startGame(self):
-        self.showTable()
+        self.callDiffButtons()
         self.root.mainloop()
