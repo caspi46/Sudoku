@@ -1,12 +1,9 @@
 # from https://lvngd.com/blog/generating-and-solving-sudoku-puzzles-python/
-
 import random
 import copy
 class SudokuSetSet:
     def __init__(self, grid=None):
         self.counter = 0
-        # path is for the matplotlib animation
-        #self.path = []
         # if a grid/puzzle is passed in, make a copy and solve it
         if grid:
             if len(grid[0]) == 9 and len(grid) == 9:
@@ -58,7 +55,6 @@ class SudokuSetSet:
                 random.shuffle(number_list)
                 for number in number_list:
                     if self.valid_location(grid, row, col, number):
-                        #self.path.append((number, row, col))
                         grid[row][col] = number
                         if self.find_empty_square(grid):
                             return True
