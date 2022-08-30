@@ -1,3 +1,5 @@
+# from https://lvngd.com/blog/generating-and-solving-sudoku-puzzles-python/
+
 import random
 import copy
 class SudokuSetSet:
